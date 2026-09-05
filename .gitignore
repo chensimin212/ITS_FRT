@@ -1,0 +1,19 @@
+# ===== 编译产物 =====
+# MetaEditor 编译生成的可执行文件，按源码重新编译即可，不入库
+*.ex5
+
+# ===== 临时编译日志 =====
+# /compile skill 读完即删，偶有残留时忽略
+compile_check.log
+*.log
+
+# ===== 编辑器 / 系统临时文件 =====
+*.tmp
+Thumbs.db
+Desktop.ini
+
+# ===== Git 隔离工作区 =====
+.worktrees/
+
+# ===== Codegraph 索引 =====
+.codegraph/
