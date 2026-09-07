@@ -3,6 +3,7 @@
 #define CONTROLLED_MARTINGALE_MODEL_DIRECTIONSEQUENCE_MQH
 
 #include <Object.mqh>
+#include "../Core/Enums.mqh"
 
 //--------------------------------------------------------------------
 // CDirectionSequence - 单方向序列状态
@@ -11,8 +12,6 @@ class CDirectionSequence : public CObject {
 public:
     E_ORDER_SIDE Side;         // 当前序列所属订单方向
     int PositionCount;         // 当前方向持仓数量
-    int RescueCount;           // 当前方向注释标记为 R 的亏损补仓数量
-    int AddCount;              // 当前方向注释标记为 A 的盈利加仓数量
     double TotalVolume;        // 当前方向实际持仓总手数
     double TotalNetProfit;     // 当前方向组合净盈亏（含库存费与佣金）
     bool AllProtected;         // 当前方向每笔持仓均有有效保护价；空仓为 false
@@ -29,7 +28,7 @@ public:
     double LeastLosingAdverseDistance; // 亏损距离最小仓位逆向价格距离
     long LeastLosingOpenTimeMsc;       // 亏损距离最小仓位开仓毫秒时间
 
-    // L3新增：锁盈统计
+    // 锁盈统计（当前无消费方）
     int LockedCount;      // 已锁盈仓位数量
     double LockRatio;     // 锁盈比例（LockedCount / PositionCount）
 
@@ -51,8 +50,6 @@ public:
     void Reset(E_ORDER_SIDE side) {
         Side = side;              // 设置本轮统计方向
         PositionCount = 0;        // 清空持仓数量
-        RescueCount = 0;          // 清空亏损补仓数量
-        AddCount = 0;             // 清空盈利加仓数量
         TotalVolume = 0.0;        // 清空实际持仓总手数
         TotalNetProfit = 0.0;     // 清空组合净盈亏
         AllProtected = false;     // 空仓不构成整体锁盈
@@ -68,8 +65,8 @@ public:
         LeastLosingOpenPrice = 0.0;
         LeastLosingAdverseDistance = 0.0;
         LeastLosingOpenTimeMsc = 0;
-        LockedCount = 0;           // L3新增：初始化锁盈计数
-        LockRatio = 0.0;           // L3新增：初始化锁盈比例
+        LockedCount = 0;          // 清空已锁盈仓位数量
+        LockRatio = 0.0;          // 清空锁盈比例
     }
 };
 

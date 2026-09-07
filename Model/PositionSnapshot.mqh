@@ -4,6 +4,7 @@
 #property strict
 
 #include <Object.mqh>
+#include "../Core/Enums.mqh"
 
 //--------------------------------------------------------------------
 // CPositionSnapshot - 仓位快照
@@ -21,7 +22,7 @@ public:
     double Profit;          // 盈利
     datetime OpenTime;      // 开仓时间
     long OpenTimeMsc;       // 开仓时间（毫秒，用于稳定识别最新仓位）
-    string Comment;         // 备注（识别进场E/加仓A/补仓R）
+    string Comment;         // 平台原始备注，仅留作诊断事实（当前无消费方）
     double Swap;            // 库存费
     double Commission;      // 按持仓手数预留的双边总佣金（负值）
     double LockedNetProfit; // 按当前止损退出时该笔持仓的锁定净收益；无止损时为0

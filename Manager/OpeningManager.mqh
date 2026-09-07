@@ -24,7 +24,7 @@ public:
     bool Init(CContext *context, CTradeApi *tradeApi, CRiskController *riskController) {
         _logger.Enable(true);
         _logger.SetModuleName("开仓管理器");
-        _logger.SetLogLevel(LOG_DEBUG);
+        _logger.SetLogLevel(context.Config.LogLevel);
         _logger.LogInfo("开仓管理器初始化（空壳，ITS_FRT 不使用）");
         return true;
     }

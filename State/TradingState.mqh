@@ -53,7 +53,6 @@ public:
     bool IsEntryBlocked();       // 禁止开仓
     bool IsTerminated();         // 已终止，等待人工重启
     bool IsPausedIndefinitely(); // 暂停中且无定时恢复计划
-    string Description();        // 当前状态原因；正常时返回"正常开仓"
 
     // —— 写侧 ——
     void PauseEntry(const string reason, datetime resumeTime);  // 暂停开仓
@@ -153,14 +152,6 @@ bool CTradingState::IsPausedIndefinitely() {
 }
 
 //--------------------------------------------------------------------
-// 当前状态原因；正常时返回"正常开仓"
-//--------------------------------------------------------------------
-string CTradingState::Description() {
-    if (_state == TRADING_NORMAL) return StateName(_state);
-    return _reason;
-}
-
-//--------------------------------------------------------------------
 // 暂停开仓：既有仓位照常管理
 //   恢复时间 >0 时到期由 ResumeEntry(false) 自动恢复；传 0 表示恢复时机未知，
 //   须由调用方确认暂停条件已消失后调 ResumeEntry(true)。
@@ -171,8 +162,9 @@ void CTradingState::PauseEntry(const string reason, datetime resumeTime) {
 
     EnterState(TRADING_PAUSED, reason, resumeTime);
     string resumeText = (resumeTime > 0 ? TimeToString(resumeTime) : "待条件恢复");
+    string startTimeText = TimeToString(_stopTime);
     _logger.LogWarn(StringFormat("暂停开仓：%s | 开始时间：%s | 预计恢复：%s",
-                                 reason, TimeToString(_stopTime), resumeText));
+                                 reason, startTimeText, resumeText));
 }
 
 //--------------------------------------------------------------------
@@ -183,8 +175,10 @@ void CTradingState::Liquidating(const string reason, datetime finishTime) {
     if (_state >= TRADING_LIQUIDATING) return;
 
     EnterState(TRADING_LIQUIDATING, reason, finishTime);
+    string startTimeText = TimeToString(_stopTime);
+    string finishTimeText = TimeToString(_resumeTime);
     _logger.LogWarn(StringFormat("设置清仓：%s | 开始时间：%s | 预计结束：%s",
-                                 reason, TimeToString(_stopTime), TimeToString(_resumeTime)));
+                                 reason, startTimeText, finishTimeText));
 }
 
 //--------------------------------------------------------------------
@@ -195,8 +189,9 @@ void CTradingState::Terminate(const string reason) {
     if (_state >= TRADING_TERMINATED) return;
 
     EnterState(TRADING_TERMINATED, reason, STOP_RESUME_SENTINEL);
+    string stopTimeText = TimeToString(_stopTime);
     _logger.LogWarn(StringFormat("终止交易：%s | 终止时间：%s | 需人工重启EA",
-                                 reason, TimeToString(_stopTime)));
+                                 reason, stopTimeText));
 }
 
 //--------------------------------------------------------------------
@@ -208,8 +203,9 @@ void CTradingState::ResumeEntry(const bool manual) {
     if (!manual && (_resumeTime == 0 || TimeCurrent() < _resumeTime)) return;
 
     int durationSec = (int)(TimeCurrent() - _stopTime);
+    string stateText = StateName(_state);
     _logger.LogInfo(StringFormat("恢复开仓：解除%s（%s，持续=%ds）",
-                                 StateName(_state), manual ? "条件已消失" : "已到计划恢复时间", durationSec));
+                                 stateText, manual ? "条件已消失" : "已到计划恢复时间", durationSec));
 
     _state = TRADING_NORMAL;
     _reason = "";
@@ -230,16 +226,20 @@ void CTradingState::PrintStatusLog() {
 
     if (_state == TRADING_TERMINATED) {
         // 按日期差计数，避免"23:00 终止、次日 09:00 提醒"被算成 0 天
-        int days = (int)((today - StringToTime(TimeToString(_stopTime, TIME_DATE))) / 86400);
+        string stopDateText = TimeToString(_stopTime, TIME_DATE);
+        int days = (int)((today - StringToTime(stopDateText)) / 86400);
+        string stopTimeText = TimeToString(_stopTime);
         _logger.LogWarn(StringFormat("[每日提醒] 交易已终止，等待人工重启EA | 原因：%s | 终止时间：%s | 已终止 %d 天",
-                                     _reason, TimeToString(_stopTime), days));
+                                     _reason, stopTimeText, days));
         return;
     }
 
     int hours = (int)((TimeCurrent() - _stopTime) / 3600);
     string resumeText = (_resumeTime > 0 ? TimeToString(_resumeTime) : "待条件恢复");
+    string stateText = StateName(_state);
+    string startTimeText = TimeToString(_stopTime);
     _logger.LogWarn(StringFormat("[每日提醒] %s | 原因：%s | 开始时间：%s | 已持续 %d 小时 | 预计恢复：%s",
-                                 StateName(_state), _reason, TimeToString(_stopTime), hours, resumeText));
+                                 stateText, _reason, startTimeText, hours, resumeText));
 }
 
 #endif

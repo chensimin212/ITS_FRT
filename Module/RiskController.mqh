@@ -196,7 +196,8 @@ bool CRiskController::CalcMarginMoney(E_ORDER_SIDE side, double lot, double pric
     ENUM_ORDER_TYPE type = (side == ORDER_SIDE_BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL);
     ResetLastError();
     if (!OrderCalcMargin(type, _config.Symbol, lot, price, margin)) {
-        if (logError) return _logger.LogError4Boolean(StringFormat("计算保证金失败，错误码：%d", GetLastError()));
+        int errorCode = GetLastError();
+        if (logError) return _logger.LogError4Boolean(StringFormat("计算保证金失败，错误码：%d", errorCode));
         return false;
     }
     return true;
@@ -211,7 +212,8 @@ bool CRiskController::CalcLossMoney(E_ORDER_SIDE side, double lot, double openPr
     double profit = 0.0;
     ResetLastError();
     if (!OrderCalcProfit(type, _config.Symbol, lot, openPrice, closePrice, profit)) {
-        if (logError) return _logger.LogError4Boolean(StringFormat("计算风险金额失败，错误码：%d", GetLastError()));
+        int errorCode = GetLastError();
+        if (logError) return _logger.LogError4Boolean(StringFormat("计算风险金额失败，错误码：%d", errorCode));
         return false;
     }
     loss = MathAbs(profit); // 止损在亏损侧，profit 为负；取绝对值与方向无关

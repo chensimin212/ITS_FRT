@@ -95,7 +95,8 @@ bool CAccountState::CheckStartupGuards() {
     // 账户持仓模式守卫：非对冲模式下反向首仓会减仓或反转现有仓位，直接拒绝启动
     ENUM_ACCOUNT_MARGIN_MODE marginMode = (ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE);
     if (marginMode != ACCOUNT_MARGIN_MODE_RETAIL_HEDGING) {
-        return _logger.AlertError4Boolean(StringFormat("账户持仓模式必须为对冲模式，当前=%s；已拒绝启动以避免反向首仓减仓或反转现有仓位", EnumToString(marginMode)));
+        string marginModeName = EnumToString(marginMode);
+        return _logger.AlertError4Boolean(StringFormat("账户持仓模式必须为对冲模式，当前=%s；已拒绝启动以避免反向首仓减仓或反转现有仓位", marginModeName));
     }
 
     // 固定模式仅允许启动净值比固定风险净值低5%

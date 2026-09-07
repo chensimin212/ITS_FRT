@@ -34,14 +34,4 @@ enum E_ORDER_SIDE {
     ORDER_SIDE_SELL = -1 // SELL:卖出方向，对应空头仓位或看跌信号
 };
 
-//----------------------------------------------------------------
-// 枚举：开仓动作
-//----------------------------------------------------------------
-enum E_ENTRY_ACTION {
-    ENTRY_ACTION_NONE = 0,
-    ENTRY_ACTION_INDICATOR, // 首单开仓（市场信号 / 时间保底信号）
-    ENTRY_ACTION_ADD,
-    ENTRY_ACTION_RESCUE
-};
-
 #endif

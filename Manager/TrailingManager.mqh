@@ -1,6 +1,6 @@
 ﻿#property strict
-#ifndef CONTROLLED_MARTINGALE_MANAGER_TRAILINGSTOPMANAGER_MQH
-#define CONTROLLED_MARTINGALE_MANAGER_TRAILINGSTOPMANAGER_MQH
+#ifndef CONTROLLED_MARTINGALE_MANAGER_TRAILINGMANAGER_MQH
+#define CONTROLLED_MARTINGALE_MANAGER_TRAILINGMANAGER_MQH
 
 #include <Object.mqh>
 #include "../Api/TradeApi.mqh"
@@ -14,12 +14,12 @@
 // CTrailingManager - 尾随止损管理器
 //
 // 职责：维护已有持仓的止损，按极值窗口跟踪市场移动
-// 触发：每个 M1 新 bar（OnTick 已节流）
+// 触发：OnTick 门控（新 bar 或新价格）后由组成根调用
 // 保护策略：
 //   - 篮子锁盈（方向组合级）：整体锁盈 > 0 时，统一推进所有同向腿
 //   - 逐笔锁盈（仓位级）：单笔盈利达到锁盈距离时，推进该腿止损
 // 基础止损：锚定周期的已收 K 极值外留缓冲，并受 ATR 倍数封顶
-// 锚定周期：TrailingUseMiddleTF 选择（做单周期 or 中观周期）
+// 锚定周期：固定取做单周期（TradeTimeframe）
 //--------------------------------------------------------------------
 class CTrailingManager : public CObject {
 private:
@@ -53,7 +53,7 @@ private:
 
     // ======== 基础止损计算 ========
     double AnchorATR();                              // 锚定周期的 ATR
-    ENUM_TIMEFRAMES AnchorTimeframe();               // 锚定周期（做单 or 中观）
+    ENUM_TIMEFRAMES AnchorTimeframe();               // 锚定周期：做单周期
     double CalcNewStopLoss(const E_ORDER_SIDE side); // 极值窗口外缓冲，ATR 封顶
 
     // ======== 安全提交 ========
@@ -245,9 +245,7 @@ double CTrailingManager::CalcNewStopLoss(const E_ORDER_SIDE side) {
 }
 
 //--------------------------------------------------------------------
-// 锚定周期：做单周期 or 中观周期（TrailingUseMiddleTF 选择）
-// 做单周期（M5）的 3 根极值窗口仅十几分钟，易被回抽扫出；
-// 中观周期（H1）同样根数覆盖数小时，与 alpha 尺度一致。
+// 锚定周期：固定取做单周期（TradeTimeframe）
 //--------------------------------------------------------------------
 ENUM_TIMEFRAMES CTrailingManager::AnchorTimeframe() {
     return _config.TradeTimeframe;

@@ -17,14 +17,13 @@
 //   清仓窗口 [收盘-清仓分钟, 收盘)：置清仓态并撤单平仓
 // 两段窗口的恢复时间分别为清仓窗口开始时刻与收盘时刻，到期由 CTradingState 自动恢复。
 // 熔断终止的清仓由 CTradingManager 独立负责，两者互不介入。
-// 模式：NONE(关闭) / DAILY(每日) / FRIDAY(仅周五)
 //--------------------------------------------------------------------
 class CClosingManager : public CObject {
 private:
     CLogger _logger;                // 时段判定与清仓诊断日志器
     CContext *_context;             // 当前 EA 的交易状态与仓位上下文
     CTradeApi *_tradeApi;           // 撤单和平仓的同步执行接口
-    CBaseConfig *_config;           // 定时清仓模式与提前量配置
+    CBaseConfig *_config;           // 清仓与暂停开仓的提前分钟数配置
     CPositionState *_positionState; // 当前持仓数量，用于判断是否还需清仓
     CMarketState *_marketState;     // 当日交易时段收盘时刻来源
 
@@ -37,7 +36,7 @@ public:
     void Process();
 
 private:
-    void Liquidate();        // 撤单并平掉全部仓位
+    void Liquidate(); // 撤单并平掉全部仓位
 };
 
 //--------------------------------------------------------------------

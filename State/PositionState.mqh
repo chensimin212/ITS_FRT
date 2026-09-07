@@ -37,7 +37,6 @@ private:
     void Reset();                                                                                                                                // 清空本轮聚合状态
     void ApplySequence(CDirectionSequence &sequence, const CPositionSnapshot &snapshot, const bool hasProtection, const double lockedNetProfit); // 累计方向事实
     E_ORDER_SIDE ToOrderSide(ENUM_POSITION_TYPE type);                                                                                           // 转换平台持仓类型；未知类型返回 ORDER_SIDE_NONE
-    int ParseLayer(const string comment, const string prefix);                                                                                  // 解析A/R数字层级，非法返回0
 };
 
 //--------------------------------------------------------------------
@@ -139,7 +138,7 @@ bool CPositionState::Refresh() {
         }
     }
 
-    // L3新增：计算锁盈比例
+    // 锁盈比例：已锁盈仓位数占方向持仓数（当前无消费方）
     if (BuySequence.PositionCount > 0) {
         BuySequence.LockRatio = (double)BuySequence.LockedCount / BuySequence.PositionCount;
     } else {
@@ -222,23 +221,19 @@ void CPositionState::ApplySequence(CDirectionSequence &sequence, const CPosition
     sequence.PositionCount++;
     sequence.AllProtected = (sequence.PositionCount == 1 ? hasProtection : sequence.AllProtected && hasProtection);
     sequence.LockedNetProfit += lockedNetProfit;
-    int rescueLayer = ParseLayer(snapshot.Comment, "R");
-    int addLayer = ParseLayer(snapshot.Comment, "A");
-    if (rescueLayer > sequence.RescueCount) sequence.RescueCount = rescueLayer;
-    if (addLayer > sequence.AddCount) sequence.AddCount = addLayer;
     sequence.TotalVolume += snapshot.Volume;
     sequence.TotalNetProfit += snapshot.Profit + snapshot.Swap + snapshot.Commission;
 
-    // 逐笔锁盈：每笔按自身保护价退出均须净收益为正（严于方向合计口径，供盈利加仓判定）
+    // 逐笔锁盈：每笔按自身保护价退出均须净收益为正（严于方向合计口径；当前无消费方）
     bool legLocked = (hasProtection && lockedNetProfit > 0);
     sequence.AllLegLocked = (sequence.PositionCount == 1 ? legLocked : sequence.AllLegLocked && legLocked);
 
-    // L3新增：累计锁盈数量
+    // 累计已锁盈仓位数量（当前无消费方）
     if (legLocked) {
         sequence.LockedCount++;
     }
 
-    // 同向最保守保护价：多单取最小止损、空单取最大止损，供加仓/补仓共用；
+    // 同向最保守保护价：多单取最小止损、空单取最大止损（当前无消费方）；
     // 任一笔无保护价即置 0 并保持为 0（此时无法给新增仓位继承一个可靠的共用止损）
     if (sequence.PositionCount == 1) {
         sequence.ProtectiveStopLoss = (hasProtection ? snapshot.StopLoss : 0.0);
@@ -258,7 +253,7 @@ void CPositionState::ApplySequence(CDirectionSequence &sequence, const CPosition
         sequence.LatestOpenTimeMsc = snapshot.OpenTimeMsc;
     }
 
-    // 选择仍亏损且最接近盈亏平衡的仓位，供补仓距离判断。
+    // 选择仍亏损且最接近盈亏平衡的仓位（当前无消费方）。
     double currentPrice = (snapshot.Side == ORDER_SIDE_BUY
                                ? SymbolInfoDouble(snapshot.Symbol, SYMBOL_BID)
                                : SymbolInfoDouble(snapshot.Symbol, SYMBOL_ASK));
@@ -276,20 +271,6 @@ void CPositionState::ApplySequence(CDirectionSequence &sequence, const CPosition
         sequence.LeastLosingAdverseDistance = adverseDistance;
         sequence.LeastLosingOpenTimeMsc = snapshot.OpenTimeMsc;
     }
-}
-
-//--------------------------------------------------------------------
-// 解析A/R开仓注释中的正整数层级
-//--------------------------------------------------------------------
-int CPositionState::ParseLayer(const string comment, const string prefix) {
-    if (StringFind(comment, prefix) != 0 || StringLen(comment) <= StringLen(prefix)) return 0;
-    string suffix = StringSubstr(comment, StringLen(prefix));
-    for (int index = 0; index < StringLen(suffix); index++) {
-        ushort character = StringGetCharacter(suffix, index);
-        if (character < '0' || character > '9') return 0;
-    }
-    int layer = (int)StringToInteger(suffix);
-    return (layer > 0 ? layer : 0);
 }
 
 //--------------------------------------------------------------------

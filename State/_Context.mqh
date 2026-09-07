@@ -25,7 +25,7 @@ public:
     CSymbolState SymbolState;     // 品种状态
     CAccountState AccountState;   // 账号状态
     CPositionState PositionState; // 持仓状态
-    CMarketState MarketState;     // 市场状态（三周期原子快照 / 兼容ATR与极值 / 交易时段收盘时刻）
+    CMarketState MarketState;     // 市场状态（ATR 占位 / 极值查询 / 交易时段收盘时刻）
     CTradingState TradingState;   // 交易状态（写侧 PauseEntry/ResumeEntry/Liquidating/Terminate）
 
 public:

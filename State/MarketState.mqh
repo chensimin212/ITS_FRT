@@ -17,7 +17,7 @@ private:
     CSymbolState *_symbolState;
 
 public:
-    double TradeATR;           // 交易周期 ATR（兼容性保留）
+    double TradeATR;           // 交易周期 ATR，供尾随止损读取；当前 Refresh() 恒置 0（未实现计算）
     datetime DaySessionClose;  // 当日收盘时间
 
 public:
@@ -26,7 +26,6 @@ public:
 
     bool Init(CBaseConfig *config, CSymbolState *symbolState);
     bool Refresh();
-    bool IsTradeATRReady();
 
     // 辅助方法
     double LowestPriceOn(ENUM_TIMEFRAMES timeframe, int lookbackBars, int shift = 0);
@@ -76,13 +75,6 @@ bool CMarketState::Refresh() {
     TradeATR = 0.0;
 
     return true;
-}
-
-//--------------------------------------------------------------------
-// 检查交易 ATR 是否就绪
-//--------------------------------------------------------------------
-bool CMarketState::IsTradeATRReady() {
-    return false;  // ITS_FRT 暂不使用 ATR
 }
 
 //--------------------------------------------------------------------
